@@ -34,7 +34,7 @@ namespace FbCopy
             else
             {
                 string left = s.Substring(0, pos);
-                s.Remove(0, pos + 1);
+                s= s.Remove(0, pos + 1);
                 pos = left.IndexOf(":");
                 if (pos == -1)
                 {
@@ -51,7 +51,7 @@ namespace FbCopy
                 if (pos > 1)  // to avoid drive letter
                 {
                     dbInfo.Hostname = s.Substring(0, pos);
-                    s.Remove(0, pos + 1);
+                    s=s.Remove(0, pos + 1);
                 }
             }
 
@@ -59,7 +59,7 @@ namespace FbCopy
             if (pos != -1)
             {
                 dbInfo.Charset = s.Substring(pos + 1);
-                s.Remove(pos);
+                s=s.Remove(pos);
             }
             dbInfo.Database = s;
 

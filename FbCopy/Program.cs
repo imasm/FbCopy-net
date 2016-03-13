@@ -12,12 +12,21 @@ namespace FbCopy
             .MapResult(
                 (CopyOptions opts) => ExecuteCopy(opts),
                 (DefineOptions opts) => ExecuteDefine(opts),
-                errs => 1);            
+                errs => 1);
+                 
         }
 
         private static int ExecuteDefine(DefineOptions opts)
         {
-            DisplayHeader();            
+            DisplayHeader();
+            DatabaseInfo sourceDb = DatabaseInfo.Parse(opts.Source);
+            
+            using (var db = new Database())
+            {
+                db.Connect(sourceDb);
+                db.Disconnect();
+            }
+            Console.ReadLine();
             return 0;
         }
 

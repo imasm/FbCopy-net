@@ -6,15 +6,18 @@ namespace FbCopy
     {
         [Option('s', "Source",
         HelpText = "Source database")]
-        public bool Source { get; set; }
+        public string Source { get; set; }
 
         [Option('d', "Destination",
         HelpText = "Destination database")]
-        public bool Destination { get; set; }
+        public string Destination { get; set; }
 
         [Option('v', "Verbose",
          HelpText = "Verbose, show all errors with K option (default = off).")]
         public bool Verbose { get; set; }
+
+       
+
     }
 
     [Verb("copy", HelpText = "Reads that definition from stdin and does the copying.")]
