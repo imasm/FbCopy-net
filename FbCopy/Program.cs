@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using System;
+using System.Runtime.InteropServices;
 
 namespace FbCopy
 {
@@ -13,33 +14,33 @@ namespace FbCopy
                 (CopyOptions opts) => ExecuteCopy(opts),
                 (DefineOptions opts) => ExecuteDefine(opts),
                 errs => 1);
-                 
         }
 
         private static int ExecuteDefine(DefineOptions opts)
         {
             DisplayHeader();
-            DatabaseInfo sourceDb = DatabaseInfo.Parse(opts.Source);
-            
-            using (var db = new Database())
-            {
-                db.Connect(sourceDb);
-                db.Disconnect();
-            }
-            Console.ReadLine();
+            DefineService defineService = new DefineService(opts);
+            defineService.Run();
+
             return 0;
         }
 
         private static int ExecuteCopy(CopyOptions opts)
         {
-            DisplayHeader();            
+            DisplayHeader();
+            CopyService copyService = new CopyService(opts);
+            copyService.Run();
             return 0;
         }
 
         static void DisplayHeader()
         {
-            Console.WriteLine(HeadingInfo.Default.ToString());
-            Console.WriteLine(CopyrightInfo.Default.ToString());
+            Console.Error.WriteLine(HeadingInfo.Default.ToString());
+            Console.Error.WriteLine(CopyrightInfo.Default.ToString());
         }
+
+
+        
+        
     }
 }

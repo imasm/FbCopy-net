@@ -4,20 +4,17 @@ namespace FbCopy
 {
     public abstract class CommonOptions
     {
-        [Option('s', "Source",
+        [Option('s', "Source", Required = true,
         HelpText = "Source database")]
         public string Source { get; set; }
 
-        [Option('d', "Destination",
+        [Option('d', "Destination", Required = true,
         HelpText = "Destination database")]
         public string Destination { get; set; }
 
-        [Option('v', "Verbose",
+        [Option('v', "Verbose", 
          HelpText = "Verbose, show all errors with K option (default = off).")]
         public bool Verbose { get; set; }
-
-       
-
     }
 
     [Verb("copy", HelpText = "Reads that definition from stdin and does the copying.")]

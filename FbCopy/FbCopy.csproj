@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,10 +52,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineArgs.cs" />
+    <Compile Include="CopyService.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="DatabaseExtensions.cs" />
     <Compile Include="DatabaseInfo.cs" />
+    <Compile Include="DependencyBuilder.cs" />
+    <Compile Include="DefineService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TableDependency.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
