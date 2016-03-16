@@ -74,9 +74,9 @@ namespace FbCopy
             var srcfields = _sourceDb.GetFields(tablename);
             var destfields = _destDb.GetFields(tablename);
 
-            var fields = srcfields.Intersect(destfields).Select(x=> Quote(x));
-            var missing = srcfields.Except(destfields).Select(x => Quote(x));
-            var extra = destfields.Except(srcfields).Select(x => Quote(x));
+            var fields = srcfields.Intersect(destfields).Select(x => x.Quote());
+            var missing = srcfields.Except(destfields).Select(x => x.Quote());
+            var extra = destfields.Except(srcfields).Select(x => x.Quote());
 
             Output($"#T:{tablename}:{string.Join(",", fields)}:{string.Join(",", missing)}:{string.Join(",", extra)}:");
         }
@@ -99,9 +99,6 @@ namespace FbCopy
             Console.WriteLine(message);
         }
 
-        private static string Quote(string x)
-        {
-            return "\"" + x + "\"";
-        }
+       
     }
 }

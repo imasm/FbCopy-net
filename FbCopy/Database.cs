@@ -69,17 +69,9 @@ namespace FbCopy
 
         private string GetCharset()
         {
+            const string sql = "SELECT rdb$character_set_name FROM rdb$database";
             WriteLine("Reading charset: ");
-
-            string charset = null;
-            using (var trans = _connection.BeginTransaction())
-            {
-                using (var cmd = new FbCommand("SELECT rdb$character_set_name FROM rdb$database", _connection, trans))
-                {
-                    charset = cmd.Read(dr => dr.GetTrimmedString(0)).FirstOrDefault();
-                }
-            }
-            return charset;
+            return Execute(sql).FirstOrDefault();
         }
 
         public List<string> GetListOfTables()
@@ -89,15 +81,7 @@ namespace FbCopy
                                "and RDB$VIEW_SOURCE is null ORDER BY 1";
 
             WriteLine("Loading list of tables...");
-            List<string> list = new List<string>();
-            using (var trans = _connection.BeginTransaction())
-            {
-                using (var cmd = new FbCommand(sql, _connection, trans))
-                {
-                    list.AddRange(cmd.Read<string>(dr => dr.GetTrimmedString(0)));
-                }
-            }
-            return list;
+            return Execute(sql);
         }
 
         public List<string> GetListOfGenerators()
@@ -106,15 +90,7 @@ namespace FbCopy
                                "where (RDB$SYSTEM_FLAG = 0 or RDB$SYSTEM_FLAG is null) order by 1";
 
             WriteLine("Loading list of generators ...");
-            List<string> list = new List<string>();
-            using (var trans = _connection.BeginTransaction())
-            {
-                using (var cmd = new FbCommand(sql, _connection, trans))
-                {
-                    list.AddRange(cmd.Read<string>(dr => dr.GetTrimmedString(0)));
-                }
-            }
-            return list;
+            return Execute(sql);
         }
 
         public List<string> GetTableDependencies(string table)
@@ -158,6 +134,35 @@ namespace FbCopy
                                " AND f.rdb$computed_blr is null" +
                                " ORDER BY 1";
 
+            return Execute(sql, tablename);
+        }
+
+        public List<string> GetPrimayKeys(string tablename)
+        {
+            const string sql = " select i.rdb$field_name" +
+                               " from rdb$relation_constraints r, rdb$index_segments i " +
+                               " where r.rdb$relation_name=@tablename and r.rdb$index_name=i.rdb$index_name" +
+                               " and (r.rdb$constraint_type='PRIMARY KEY') ";
+
+            
+            return Execute(sql, tablename);
+        }
+
+        private List<string> Execute(string sql)
+        {
+            List<string> list = new List<string>();
+            using (var trans = _connection.BeginTransaction())
+            {
+                using (FbCommand cmd = new FbCommand(sql, _connection, trans))
+                {
+                    list.AddRange(cmd.Read(x => x.GetTrimmedString(0)));
+                }
+            }
+            return list;
+        }
+
+        private List<string> Execute(string sql, string tablename)
+        {
             List<string> list = new List<string>();
             using (var trans = _connection.BeginTransaction())
             {
