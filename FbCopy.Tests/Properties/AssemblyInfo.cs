@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("FbCopy")]
+[assembly: AssemblyTitle("FbCopy.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Ivan Masmitja")]
-[assembly: AssemblyProduct("FbCopy")]
-[assembly: AssemblyCopyright("Copyright © Ivan Masmitjà 2016")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("FbCopy.Tests")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("23b2dd47-8304-4b00-b65f-72a74b0a4b47")]
+[assembly: Guid("d875aa09-ac8f-4c45-8f2c-a74bb18ce078")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,5 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-
-[assembly:InternalsVisibleTo("FbCopy.Tests")]

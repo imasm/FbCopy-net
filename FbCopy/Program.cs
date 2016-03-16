@@ -1,7 +1,6 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 using System;
-using System.Runtime.InteropServices;
 
 namespace FbCopy
 {
@@ -38,9 +37,6 @@ namespace FbCopy
             Console.Error.WriteLine(HeadingInfo.Default.ToString());
             Console.Error.WriteLine(CopyrightInfo.Default.ToString());
         }
-
-
-        
-        
+               
     }
 }
