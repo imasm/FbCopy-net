@@ -1,4 +1,5 @@
 ﻿using System;
+using FirebirdSql.Data.FirebirdClient;
 
 namespace FbCopy
 {
@@ -70,6 +71,19 @@ namespace FbCopy
         {
             return Environment.GetEnvironmentVariable(variable, EnvironmentVariableTarget.User)
                 ?? Environment.GetEnvironmentVariable(variable, EnvironmentVariableTarget.Machine);
+        }
+
+        public string GetConnectionString()
+        {
+            FbConnectionStringBuilder builder = new FbConnectionStringBuilder();
+            builder.UserID = this.Username;
+            builder.Password = this.Password;
+            builder.DataSource = this.Hostname;
+            builder.Database = this.Database;
+
+            if (string.IsNullOrEmpty(this.Charset))
+                builder.Charset = this.Charset;
+            return builder.ToString();
         }
     };
 }

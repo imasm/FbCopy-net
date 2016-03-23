@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using FbCopy.Firebird;
 
 namespace FbCopy
 {
-    public class DefineService
+    class DefineService: FbService
     {
         private readonly DefineOptions _options;
 
         private List<string> _tables;
         private TableDependency _dependencyTree;
-        private Database _sourceDb;
-        private Database _destDb;
-
+        
+        private DbConnection _sourceDb;
+        private DbConnection _destDb;
 
         public DefineService(DefineOptions opts)
         {
@@ -24,29 +25,34 @@ namespace FbCopy
             var sourceDbInfo = DatabaseInfo.Parse(_options.Source);
             var destDbInfo = DatabaseInfo.Parse(_options.Source);
 
-            using (_sourceDb = new Database())
+            if (string.IsNullOrEmpty(sourceDbInfo.Charset))
+                UpdateCharset(sourceDbInfo);
+
+            if (string.IsNullOrEmpty(destDbInfo.Charset))
+                UpdateCharset(destDbInfo);
+
+            var sourceCStr = sourceDbInfo.GetConnectionString();
+            var destCStr = destDbInfo.GetConnectionString();
+
+            using (_sourceDb = new DbConnection(sourceCStr))
             {
-                using (_destDb = new Database())
+                using (_destDb = new DbConnection(destCStr))
                 {
-                    _sourceDb.Connect(sourceDbInfo);
-                    _destDb.Connect(destDbInfo);
-
-                    LoadTables();
-                    LoadDependencyTree();
-
-                    BuildOutput();
-
-                    _sourceDb.Disconnect();
-                    _destDb.Disconnect();
+                    if (_sourceDb.Open() && _destDb.Open())
+                    {
+                        LoadTables();
+                        LoadDependencyTree();
+                        BuildOutput();
+                    }
                 }
             }
         }
 
         private void LoadTables()
         {
-            _tables = _sourceDb.GetListOfTables();
+            _tables = DbMetadata.GetListOfTables(_sourceDb);
         }
-        
+
         private void LoadDependencyTree()
         {
             DependencyBuilder dependencyBuilder = new DependencyBuilder();
@@ -71,8 +77,8 @@ namespace FbCopy
 
         private void CompareFields(string tablename)
         {
-            var srcfields = _sourceDb.GetFields(tablename);
-            var destfields = _destDb.GetFields(tablename);
+            var srcfields = DbMetadata.GetFields(_sourceDb, tablename);
+            var destfields = DbMetadata.GetFields(_destDb, tablename);
 
             var fields = srcfields.Intersect(destfields).Select(x => x.Quote());
             var missing = srcfields.Except(destfields).Select(x => x.Quote());
@@ -83,8 +89,8 @@ namespace FbCopy
 
         private void CompareGenerators()
         {
-            var srcGenerators = _sourceDb.GetListOfGenerators();
-            var destGenerators = _destDb.GetListOfGenerators();
+            var srcGenerators = DbMetadata.GetListOfGenerators(_sourceDb);
+            var destGenerators = DbMetadata.GetListOfGenerators(_destDb);
 
             foreach (var srcGenerator in srcGenerators)
             {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using FirebirdSql.Data.FirebirdClient;
 
-namespace FbCopy
+namespace FbCopy.Firebird
 {
     static class DatabaseExtensions
     {

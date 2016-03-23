@@ -70,11 +70,13 @@
     <Compile Include="CopyGeneratorInfo.cs" />
     <Compile Include="CopyService.cs" />
     <Compile Include="CopyTableInfo.cs" />
-    <Compile Include="Database.cs" />
-    <Compile Include="DatabaseExtensions.cs" />
+    <Compile Include="FbService.cs" />
+    <Compile Include="Firebird\DatabaseExtensions.cs" />
     <Compile Include="DatabaseInfo.cs" />
+    <Compile Include="Firebird\DbConnection.cs" />
     <Compile Include="DependencyBuilder.cs" />
     <Compile Include="DefineService.cs" />
+    <Compile Include="Firebird\DbMetadata.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensions.cs" />

@@ -1,52 +1,66 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using FbCopy.Firebird;
+using FirebirdSql.Data.FirebirdClient;
+using DbConnection = FbCopy.Firebird.DbConnection;
 
 namespace FbCopy
 {
-    public class CopyService
+    class CopyService: FbService
     {
         private readonly CopyOptions _options;
-        private Database _sourceDb;
-        private Database _destDb;
+        private string _sourceCStr;
+        private string _destCStr;
+        private DbConnection _sourceDb;
+        private DbConnection _destDb;
 
+        private readonly List<CopyTableInfo> _tablesToCopy;
+        private readonly List<CopyGeneratorInfo> _generatorsToCopy;
         
-
-       
 
         public CopyService(CopyOptions opts)
         {
             this._options = opts;
+            _tablesToCopy = new List<CopyTableInfo>();
+            _generatorsToCopy = new List<CopyGeneratorInfo>();
         }
 
-        public void Run()
+        public void Run(TextReader textReder)
+        {
+            PrepareConnectionStrins();
+            SetupFromStdin(textReder);
+            CopyTables();
+            CopyGenerators();
+        }
+
+        private void PrepareConnectionStrins()
         {
             var sourceDbInfo = DatabaseInfo.Parse(_options.Source);
-            var destDbInfo = DatabaseInfo.Parse(_options.Source);
+            var destDbInfo = DatabaseInfo.Parse(_options.Destination);
 
-            using (_sourceDb = new Database())
-            {
-                using (_destDb = new Database())
-                {
-                    _sourceDb.Connect(sourceDbInfo);
-                    _destDb.Connect(destDbInfo);
+            if (string.IsNullOrEmpty(sourceDbInfo.Charset))
+                UpdateCharset(sourceDbInfo);
 
-                    SetupFromStdin();
+            if (string.IsNullOrEmpty(destDbInfo.Charset))
+                UpdateCharset(destDbInfo);
 
-                    _sourceDb.Disconnect();
-                    _destDb.Disconnect();
-                }
-            }
+            _sourceCStr = sourceDbInfo.GetConnectionString();
+            _destCStr = destDbInfo.GetConnectionString();
         }
-       
 
-        private void SetupFromStdin()
+        private void SetupFromStdin(TextReader textReder)
         {
             bool firstLine = true;
             bool newFormat = false;
             string line;
             string type = "T";
 
-            while ((line = ReadLine()) != null)
+            _tablesToCopy.Clear();
+            _generatorsToCopy.Clear();
+
+            while ((line = textReder.ReadLine()) != null)
             {
                 int pos = line.IndexOf(":", StringComparison.OrdinalIgnoreCase);
                 if (pos < 0)
@@ -100,38 +114,116 @@ namespace FbCopy
 
                 if (newFormat && type.Equals("G", StringComparison.OrdinalIgnoreCase))    // generator
                 {
-                    CopyGeneratorValues(new CopyGeneratorInfo(table, fields));
+                    _generatorsToCopy.Add(new CopyGeneratorInfo(table, fields));
                     continue;
                 }
 
-                var primaryKeys = _sourceDb.GetPrimayKeys(table).Select( x => x.Quote()).ToArray();
-                CopyTable(new CopyTableInfo(table, fields.Split(','), @where, primaryKeys));
+                using (var db = new DbConnection(_sourceCStr))
+                {
+                    db.Open();
+                    var primaryKeys = DbMetadata.GetPrimayKeys(db, table).Select(x => x.Quote()).ToArray();
+                    _tablesToCopy.Add(new CopyTableInfo(table, fields.Split(','), @where, primaryKeys));
+                }
             }
         }
 
-        private string ReadLine()
+
+        private void CopyTables()
         {
-            return Console.ReadLine();
+            using (_sourceDb = new DbConnection(_sourceCStr))
+            {
+                using (_destDb = new DbConnection(_destCStr))
+                {
+                    if (_sourceDb.Open() && _destDb.Open())
+                    {
+                        foreach (var copyTableInfo in _tablesToCopy)
+                        {
+                            CopyTable(copyTableInfo);
+                            _destDb.CommitAndStartNewTransaction();
+                        }
+                    }
+                    _destDb.Commit();
+                }
+            }
         }
         
+        private void CopyTable(CopyTableInfo copyTableInfo)
+        {
+            WriteLine("Copy table " + copyTableInfo.TableName);
+
+            string select = copyTableInfo.BuildSelectStatement();
+            string updateOrInsert = copyTableInfo.BuildUpdateOrInsertStatement();
+            string update = copyTableInfo.BuildUpdateStatement();
+            string insert = copyTableInfo.BuildInsertStatement();
+
+            if (_options.Verbose)
+            {
+                WriteLine(select);
+                WriteLine(insert);
+                WriteLine(update);
+                WriteLine(updateOrInsert);
+            }
+
+            bool first = true;
+            using (FbCommand cmd = _sourceDb.CreateCommand(select), insCmd = _destDb.CreateCommand(insert))
+            {
+                using (FbDataReader dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        int fieldCount = dr.FieldCount;
+                        if (first)
+                        {
+                            for (int i = 0; i < fieldCount; i++)
+                            {
+                                insCmd.Parameters.Add(dr.GetName(i), dr[i]);
+                            }
+                            first = false;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < fieldCount; i++)
+                            {
+                                insCmd.Parameters[i].Value = dr[i];
+                            }
+                        }
+
+                        insCmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+
+        private void CopyGenerators()
+        {
+            using (_sourceDb = new DbConnection(_sourceCStr))
+            {
+                using (_destDb = new DbConnection(_destCStr))
+                {
+                    if (_sourceDb.Open() && _destDb.Open())
+                    {
+                        foreach (var copyGenerator in _generatorsToCopy)
+                        {
+                            CopyGeneratorValues(copyGenerator);
+                            _destDb.CommitAndStartNewTransaction();
+                        }
+                    }
+                    _destDb.Commit();
+                }
+            }
+        }
+
+
         private void CopyGeneratorValues(CopyGeneratorInfo copyGeneratorInfo)
         {
             WriteLine("Copy generator values " + copyGeneratorInfo.SourceName);
         }
 
-        private void CopyTable(CopyTableInfo copyTableInfo)
-        {
-            WriteLine("Copy table " + copyTableInfo.TableName);
-            WriteLine(copyTableInfo.BuildSelectStatement());
-            WriteLine(copyTableInfo.BuildInsertStatement());
-            WriteLine(copyTableInfo.BuildUpdateStatement());
-            WriteLine(copyTableInfo.BuildUpdateOrInsertStatement());
 
-        }
 
         private void WriteLine(string message)
         {
-            Console.Error.WriteLine(message);
+            Console.WriteLine(message);
         }
     }
 }

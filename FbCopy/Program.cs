@@ -28,7 +28,7 @@ namespace FbCopy
         {
             DisplayHeader();
             CopyService copyService = new CopyService(opts);
-            copyService.Run();
+            copyService.Run(Console.In);
             return 0;
         }
 
