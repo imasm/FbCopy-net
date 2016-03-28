@@ -21,10 +21,15 @@ namespace FbCopy.Tests
 
             UserRepository repos = new UserRepository(GetSourceConnectionString());
 
-            List<User> sourceList = repos.CreateFakes(5);
-            repos.InsertUsers(sourceList);
-            
-            string inputString = "#T:USERS:ID,NAME,RATING,WEIGHT, ACTIVE,DDATE,DDAY,LAST_RATING:::" + Environment.NewLine;
+            List<User> originalList = repos.CreateFakes(5);
+            repos.InsertUsers(originalList);
+
+            var sourceList = repos.GetAllUsers();
+            for (int i = 0; i < sourceList.Count; i++)
+                Assert.AreEqual(originalList[i], sourceList[i], "test users are not well inserted");
+
+
+            string inputString = "#T:USERS:ID,NAME,RATING,WEIGHT, ACTIVE,DDATE,DDAY,LAST_RATING,DESCRIPTION:::" + Environment.NewLine;
             var stringReader = new StringReader(inputString);
 
             CopyService service = new CopyService(copyOptions);

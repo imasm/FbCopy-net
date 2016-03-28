@@ -12,6 +12,7 @@ namespace FbCopy.Tests
         public DateTime Date { get; set; }
         public DateTime Day { get; set; }
         public decimal? LastRating { get; set; }
+        public string Description { get; set; }
 
         public User()
         {
@@ -39,7 +40,8 @@ namespace FbCopy.Tests
                 Active == other.Active &&
                 DatesAreEqual(Date, other.Date) &&
                 DatesAreEqual(Day, other.Day) && 
-                LastRating.Equals(other.LastRating);
+                LastRating.Equals(other.LastRating) &&
+                string.Equals(Description, other.Description);
         }
 
         public override bool Equals(object obj)
@@ -66,6 +68,7 @@ namespace FbCopy.Tests
                 hashCode = (hashCode * 397) ^ Active.GetHashCode();
                 hashCode = (hashCode * 397) ^ Date.GetHashCode();
                 hashCode = (hashCode * 397) ^ Day.GetHashCode();
+                hashCode = (hashCode * 397) ^ Description.GetHashCode();
                 return hashCode;
             }
         }
