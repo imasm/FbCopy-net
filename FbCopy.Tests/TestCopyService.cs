@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using FbCopy.Firebird;
 using NUnit.Framework;
 
 namespace FbCopy.Tests
@@ -16,17 +15,16 @@ namespace FbCopy.Tests
             CreateDestDb();
 
             CopyOptions copyOptions = new CopyOptions();
-            copyOptions.Source = "localhost:" + SourceDbPath;
-            copyOptions.Destination = "localhost:" + DestDbPath;
+            copyOptions.Source = "SYSDBA:masterkey@localhost:" + SourceDbPath;
+            copyOptions.Destination = "SYSDBA:masterkey@localhost:" + DestDbPath;
             copyOptions.Verbose = true;
 
-            List<User> sourceList = new List<User>();
-            sourceList.Add(new User(1, "user1"));
-
             UserRepository repos = new UserRepository(GetSourceConnectionString());
+
+            List<User> sourceList = repos.CreateFakes(5);
             repos.InsertUsers(sourceList);
             
-            string inputString = "#T:USERS:ID,NAME:::" + Environment.NewLine;
+            string inputString = "#T:USERS:ID,NAME,RATING,WEIGHT, ACTIVE,DDATE,DDAY,LAST_RATING:::" + Environment.NewLine;
             var stringReader = new StringReader(inputString);
 
             CopyService service = new CopyService(copyOptions);
@@ -37,7 +35,7 @@ namespace FbCopy.Tests
 
             Assert.AreEqual(sourceList.Count, desList.Count);
             for (int i = 0; i < sourceList.Count; i++)
-                Assert.AreEqual(sourceList[i], desList[i]);
+                Assert.AreEqual(sourceList[i], desList[i], "Users are not equal");
         }
     }
 }
